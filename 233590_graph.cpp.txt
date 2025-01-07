@@ -1,0 +1,118 @@
+#include <iostream>
+using namespace std;
+
+class Graph {
+private:
+    int n;
+    int** adjMatrix;
+    int* visited;
+    int* queue;
+    int front, rear;
+
+public:
+    Graph(int vertices);
+    ~Graph();
+    void addEdge(int u, int v);
+    void dfs();
+    void bfs(int start);
+    void dfsUtil(int v);
+};
+
+Graph::Graph(int vertices) : n(vertices), front(-1), rear(-1) {
+    adjMatrix = new int*[n + 1];
+    visited = new int[n + 1];
+    queue = new int[n + 1];
+    for (int i = 0; i <= n; ++i) {
+        adjMatrix[i] = new int[n + 1]();
+        visited[i] = 0;
+    }
+}
+
+Graph::~Graph() {
+    for (int i = 0; i <= n; ++i) {
+        delete[] adjMatrix[i];
+    }
+    delete[] adjMatrix;
+    delete[] visited;
+    delete[] queue;
+}
+
+void Graph::addEdge(int u, int v) {
+    adjMatrix[u][v] = 1;
+    adjMatrix[v][u] = 1;
+}
+
+void Graph::dfsUtil(int v) {
+    visited[v] = 1;
+    cout << v << " ";
+
+    for (int i = 1; i <= n; ++i) {
+        if (adjMatrix[v][i] == 1 && !visited[i]) {
+            dfsUtil(i);
+        }
+    }
+}
+
+void Graph::dfs() {
+    for (int i = 1; i <= n; ++i) {
+        visited[i] = 0;
+    }
+    cout << "DFS Traversal: ";
+    for (int i = 1; i <= n; ++i) {
+        if (!visited[i]) {
+            dfsUtil(i);
+        }
+    }
+    cout << endl;
+}
+
+void Graph::bfs(int start) {
+    for (int i = 1; i <= n; ++i) {
+        visited[i] = 0;
+    }
+
+    front = rear = 0;
+    queue[rear++] = start;
+    visited[start] = 1;
+
+    cout << "BFS Traversal starting from vertex " << start << ": ";
+    while (front < rear) {
+        int v = queue[front++];
+        cout << v << " ";
+
+        for (int i = 1; i <= n; ++i) {
+            if (adjMatrix[v][i] == 1 && !visited[i]) {
+                queue[rear++] = i;
+                visited[i] = 1;
+            }
+        }
+    }
+    cout << endl;
+}
+
+int main() {
+    int vertices, edges;
+    cout << "Enter the number of vertices: ";
+    cin >> vertices;
+
+    Graph g(vertices);
+
+    cout << "Enter the number of edges: ";
+    cin >> edges;
+    cout << "Enter the edges (u v):" << endl;
+
+    for (int i = 0; i < edges; ++i) {
+        int u, v;
+        cin >> u >> v;
+        g.addEdge(u, v);
+    }
+
+    g.dfs();
+    int startVertex;
+    cout << "Enter the starting vertex for BFS: ";
+    cin >> startVertex;
+    g.bfs(startVertex);
+
+    return 0;
+}
+

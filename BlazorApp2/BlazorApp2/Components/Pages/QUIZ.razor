@@ -1,0 +1,136 @@
+﻿@page "/quizes"
+
+<h3 class="text-center my-4">QUIZ</h3>
+
+@code {
+    private List<Question> Questions = new List<Question>();
+    private int TotalMarks = 0;
+    private bool IsSubmitted = false;
+    private string ErrorMessage = string.Empty;
+    private string ResultMessage = string.Empty; // Holds the result to display in the text box
+
+    protected override void OnInitialized()
+    {
+        // Updated questions
+        var sampleQuestions = new List<(string Text, List<string> Options, string CorrectOption)>
+        {
+            ("What is the capital of Germany?", new List<string> { "Berlin", "Munich", "Hamburg", "Frankfurt" }, "Berlin"),
+            ("Who painted the Mona Lisa?", new List<string> { "Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet" }, "Leonardo da Vinci"),
+            ("What is the powerhouse of the cell?", new List<string> { "Nucleus", "Mitochondria", "Ribosome", "Cytoplasm" }, "Mitochondria"),
+            ("Which planet is known as the Red Planet?", new List<string> { "Earth", "Mars", "Venus", "Jupiter" }, "Mars"),
+            ("Who discovered gravity?", new List<string> { "Isaac Newton", "Albert Einstein", "Galileo Galilei", "Marie Curie" }, "Isaac Newton"),
+        };
+
+        int id = 1;
+        foreach (var (text, options, correctOption) in sampleQuestions)
+        {
+            Questions.Add(new Question
+                {
+                    Id = id++,
+                    Text = text,
+                    Options = options,
+                    CorrectOption = correctOption
+                });
+        }
+    }
+
+    private void SubmitAnswers()
+    {
+        // Prevent submission if answers are incomplete
+        if (Questions.Any(q => string.IsNullOrEmpty(q.SelectedOption)))
+        {
+            ErrorMessage = "Please answer all questions before submitting!";
+            return;
+        }
+
+        // Calculate total marks
+        TotalMarks = 0;
+        foreach (var question in Questions)
+        {
+            if (question.SelectedOption == question.CorrectOption)
+            {
+                TotalMarks += 5;
+            }
+        }
+
+        IsSubmitted = true;
+        ResultMessage = $"You scored {TotalMarks} out of {Questions.Count * 5}";
+        ErrorMessage = string.Empty; // Clear error message after successful submission
+    }
+
+    private class Question
+    {
+        public int Id { get; set; }
+        public string Text { get; set; }
+        public List<string> Options { get; set; } = new List<string>();
+        public string CorrectOption { get; set; } = string.Empty;
+        public string SelectedOption { get; set; } = string.Empty;
+    }
+}
+
+<div class="container">
+    @if (!IsSubmitted)
+    {
+        @foreach (var question in Questions)
+        {
+            <div class="card my-3">
+                <div class="card-body">
+                    <h5 class="card-title">@question.Text</h5>
+
+                    @foreach (var option in question.Options)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   id="@($"{question.Id}-{option}")"
+                                   name="@($"question-{question.Id}")"
+                                   value="@option"
+                                   @onclick="() => question.SelectedOption = option"
+                                   checked="@((option == question.SelectedOption) ? true : false)"
+                                   disabled="@IsSubmitted" />
+                            <label class="form-check-label" for="@($"{question.Id}-{option}")">
+                                @option
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
+
+        <div class="d-flex align-items-center">
+            <button class="btn btn-success" @onclick="SubmitAnswers">Submit</button>
+            <div class="ml-3" style="flex-grow: 1;">
+                <input class="form-control" type="text" value="@ResultMessage" placeholder="Your result will appear here" readonly />
+            </div>
+        </div>
+    }
+
+    @if (IsSubmitted)
+    {
+        @foreach (var question in Questions)
+        {
+            <div class="card my-3">
+                <div class="card-body">
+                    <h5 class="card-title">@question.Text</h5>
+                    <p><strong>Selected:</strong> @question.SelectedOption</p>
+
+                    @if (question.SelectedOption == question.CorrectOption)
+                    {
+                        <p class="text-success"><strong>Correct!</strong></p>
+                    }
+                    else
+                    {
+                        <p class="text-danger">
+                            <strong>Incorrect.</strong> Correct Answer: @question.CorrectOption
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
